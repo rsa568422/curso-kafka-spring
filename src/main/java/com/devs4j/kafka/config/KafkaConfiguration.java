@@ -52,6 +52,7 @@ public class KafkaConfiguration {
                 new ConcurrentKafkaListenerContainerFactory<>();
         listenerContainerFactory.setConsumerFactory(consumerFactory());
         listenerContainerFactory.setBatchListener(true);
+        listenerContainerFactory.setConcurrency(3);
         return listenerContainerFactory;
     }
 
