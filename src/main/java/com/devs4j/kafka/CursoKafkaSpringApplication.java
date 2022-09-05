@@ -13,6 +13,8 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.util.concurrent.ListenableFuture;
 
+import java.util.concurrent.TimeUnit;
+
 @SpringBootApplication
 public class CursoKafkaSpringApplication implements CommandLineRunner {
 
@@ -32,25 +34,7 @@ public class CursoKafkaSpringApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		ListenableFuture<SendResult<String, String>> future = kafkaTemplate
-				.send("devs4j-topic", "Sample message");
-		future.addCallback(new KafkaSendCallback<>() {
-
-			@Override
-			public void onSuccess(SendResult<String, String> result) {
-				log.info("Message sent: {}", result.getRecordMetadata().offset());
-			}
-
-			@Override
-			public void onFailure(Throwable ex) {
-				log.error("Error sending message: ", ex);
-			}
-
-			@Override
-			public void onFailure(KafkaProducerException ex) {
-				log.error("Error sending message: ", ex);
-			}
-		});
+		kafkaTemplate.send("devs4j-topic", "Sample message").get(100, TimeUnit.MILLISECONDS);
 	}
 
 }
