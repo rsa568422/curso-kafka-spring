@@ -1,5 +1,6 @@
 package com.devs4j.kafka;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +25,16 @@ public class CursoKafkaSpringApplication implements CommandLineRunner {
 				   containerFactory = "listenerContainerFactory",
 				   groupId = "devs4j-group",
 				   properties = {"max.poll.interval.ms:4000", "max.poll.records:10"})
-	public void listen(List<String> messages) {
+	public void listen(List<ConsumerRecord<String, String>> messages) {
 		log.info("Start reading messages");
-		messages.forEach(message -> log.info("Message received: {}", message));
+
+		messages.forEach(message ->
+				log.info("Partition = {}, Offset = {}, Key = {}, Value = {}",
+						message.partition(),
+						message.offset(),
+						message.key(),
+						message.value()));
+
 		log.info("Batch completed");
 	}
 
