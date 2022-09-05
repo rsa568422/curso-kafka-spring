@@ -8,10 +8,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @SpringBootApplication
 public class CursoKafkaSpringApplication implements CommandLineRunner {
@@ -19,9 +19,14 @@ public class CursoKafkaSpringApplication implements CommandLineRunner {
 	@Autowired
 	private KafkaTemplate<String, String> kafkaTemplate;
 
+	@Autowired
+	private KafkaListenerEndpointRegistry registry;
+
 	private static final Logger log = LoggerFactory.getLogger(CursoKafkaSpringApplication.class);
 
-	@KafkaListener(topics = "devs4j-topic",
+	@KafkaListener(id = "devs4jId",
+				   autoStartup = "false",
+				   topics = "devs4j-topic",
 				   containerFactory = "listenerContainerFactory",
 				   groupId = "devs4j-group",
 				   properties = {"max.poll.interval.ms:4000", "max.poll.records:10"})
@@ -47,6 +52,14 @@ public class CursoKafkaSpringApplication implements CommandLineRunner {
 		for (int i = 0; i < 100; i++) {
 			kafkaTemplate.send("devs4j-topic", String.format("Sample message %d", i));
 		}
+
+		log.info("Waiting to start");
+		Thread.sleep(5000);
+		log.info("Starting");
+		registry.getListenerContainer("devs4jId").start();
+		log.info("Waiting to stop");
+		Thread.sleep(5000);
+		registry.getListenerContainer("devs4jId").stop();
 	}
 
 }
