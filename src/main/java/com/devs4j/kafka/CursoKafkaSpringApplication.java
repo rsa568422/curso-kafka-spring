@@ -7,12 +7,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.core.KafkaProducerException;
-import org.springframework.kafka.core.KafkaSendCallback;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
-import org.springframework.util.concurrent.ListenableFuture;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @SpringBootApplication
@@ -23,9 +20,14 @@ public class CursoKafkaSpringApplication implements CommandLineRunner {
 
 	private static final Logger log = LoggerFactory.getLogger(CursoKafkaSpringApplication.class);
 
-	@KafkaListener(topics = "devs4j-topic", groupId = "devs4j-group")
-	public void listen(String message) {
-		log.info("Message received: {}", message);
+	@KafkaListener(topics = "devs4j-topic",
+				   containerFactory = "listenerContainerFactory",
+				   groupId = "devs4j-group",
+				   properties = {"max.poll.interval.ms:4000", "max.poll.records:10"})
+	public void listen(List<String> messages) {
+		log.info("Start reading messages");
+		messages.forEach(message -> log.info("Message received: {}", message));
+		log.info("Batch completed");
 	}
 
 	public static void main(String[] args) {
