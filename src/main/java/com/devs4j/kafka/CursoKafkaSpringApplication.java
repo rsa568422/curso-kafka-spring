@@ -36,7 +36,9 @@ public class CursoKafkaSpringApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		kafkaTemplate.send("devs4j-topic", "Sample message").get(100, TimeUnit.MILLISECONDS);
+		for (int i = 0; i < 100; i++) {
+			kafkaTemplate.send("devs4j-topic", String.format("Sample message %d", i));
+		}
 	}
 
 }
