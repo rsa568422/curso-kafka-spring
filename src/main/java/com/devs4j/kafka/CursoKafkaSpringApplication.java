@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.List;
 
@@ -47,19 +48,16 @@ public class CursoKafkaSpringApplication implements CommandLineRunner {
 		SpringApplication.run(CursoKafkaSpringApplication.class, args);
 	}
 
+	@Scheduled(fixedDelay = 1000, initialDelay = 500)
+	public void print() {
+		log.info("Devs4j rules");
+	}
+
 	@Override
 	public void run(String... args) throws Exception {
 		for (int i = 0; i < 100; i++) {
 			kafkaTemplate.send("devs4j-topic", String.format("Sample message %d", i));
 		}
-
-		log.info("Waiting to start");
-		Thread.sleep(5000);
-		log.info("Starting");
-		registry.getListenerContainer("devs4jId").start();
-		log.info("Waiting to stop");
-		Thread.sleep(5000);
-		registry.getListenerContainer("devs4jId").stop();
 	}
 
 }
