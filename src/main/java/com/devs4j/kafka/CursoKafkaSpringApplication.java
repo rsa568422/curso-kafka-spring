@@ -1,5 +1,6 @@
 package com.devs4j.kafka;
 
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
@@ -32,16 +33,6 @@ public class CursoKafkaSpringApplication {
 				   properties = {"max.poll.interval.ms:4000", "max.poll.records:50"})
 	public void listen(List<ConsumerRecord<String, String>> messages) {
 		log.info("Messages received {}", messages.size());
-		/*log.info("Start reading messages");
-
-		messages.forEach(message ->
-				log.info("Partition = {}, Offset = {}, Key = {}, Value = {}",
-						message.partition(),
-						message.offset(),
-						message.key(),
-						message.value()));
-
-		log.info("Batch completed");*/
 	}
 
 	public static void main(String[] args) {
@@ -57,6 +48,10 @@ public class CursoKafkaSpringApplication {
 
 	@Scheduled(fixedDelay = 2000, initialDelay = 500)
 	public void printMetrics() {
+		List<Meter> metrics = meterRegistry.getMeters();
+
+		metrics.forEach(metric -> log.info("Meter = {}", metric.getId().getName()));
+
 		double count = meterRegistry.get("kafka.producer.record.send.total").functionCounter().count();
 		log.info("Count {}", count);
 	}
