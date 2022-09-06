@@ -1,5 +1,8 @@
 package com.devs4j.kafka.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -7,15 +10,14 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.*;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
+@EnableScheduling
 public class KafkaConfiguration {
 
     public Map<String, Object> producerProperties() {
@@ -35,10 +37,15 @@ public class KafkaConfiguration {
         return properties;
     }
 
+    @Bean
     public KafkaTemplate<String, String> kafkaTemplate() {
         DefaultKafkaProducerFactory<String, String> producerFactory =
                 new DefaultKafkaProducerFactory<>(producerProperties());
-        return new KafkaTemplate<>(producerFactory);
+
+        producerFactory.addListener(new MicrometerProducerListener<>(meterRegistry()));
+
+        KafkaTemplate<String, String> template = new KafkaTemplate<>(producerFactory);
+        return template;
     }
 
     @Bean
@@ -52,7 +59,14 @@ public class KafkaConfiguration {
                 new ConcurrentKafkaListenerContainerFactory<>();
         listenerContainerFactory.setConsumerFactory(consumerFactory());
         listenerContainerFactory.setBatchListener(true);
+        listenerContainerFactory.setConcurrency(3);
         return listenerContainerFactory;
+    }
+
+    @Bean
+    public MeterRegistry meterRegistry() {
+        PrometheusMeterRegistry meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+        return meterRegistry;
     }
 
 }
